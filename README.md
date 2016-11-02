@@ -7,4 +7,4 @@ Thumbnail generator library for Clojure
 
 ## License
 
-MIT
+MIT.
