@@ -108,7 +108,7 @@
       output-image
       (get-circle-thumb-path src-path))))
 
-;TODO test description
+;TODO remove method and expose only utilities
 (defn thumblr
   [src-path width height]
   (let [png (convert-to-png src-path)
