@@ -1,6 +1,6 @@
-(defproject thumbnailz "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+(defproject info.civa86/thumbnailz "0.1.0"
+  :description "Thumbnail generator library for Clojure"
+  :url "https://github.com/civa86/thumbnailz"
   :license {:name "MIT"
             :url "https://opensource.org/licenses/MIT"}
   :dependencies [
