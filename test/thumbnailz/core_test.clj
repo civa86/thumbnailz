@@ -12,6 +12,7 @@
 
 (def test-resources "test/resources/")
 (def test-image (str test-resources "test.png"))
+(def test-convert-image (str test-resources "convert.jpg"))
 
 (defn clean-files
   [f]
@@ -21,7 +22,9 @@
         ]
     (doseq [f files]
       (if (and (not (= (str f "/") test-resources))
-               (not (= (str f) test-image)))
+               (not (= (str f) test-image))
+               (not (= (str f) test-convert-image))
+               )
         (delete-file f)
         )
       )
@@ -29,64 +32,79 @@
 
 (use-fixtures :each clean-files)
 
-(deftest thumbler
-  (testing "test if path is a png file"
-    (is (= false (is-png "test_suffix.jpg")))
-    (is (= false (is-png "test_suffix.gif")))
-    (is (= false (is-png "folder/test_suffix.jpg")))
-    (is (= false (is-png "/folder/test_suffix.jpg")))
-    (is (= true (is-png "/folder/test_suffix.png")))
-    (is (= true (is-png "folder/test_suffix.png")))
-    (is (= true (is-png "image.png")))
+(deftest thumbnailz.image.utilities
+  (testing "png-file?"
+    (is (= false (png-file? "test_suffix.jpg")))
+    (is (= false (png-file? "test_suffix.gif")))
+    (is (= false (png-file? "folder/test_suffix.jpg")))
+    (is (= false (png-file? "/folder/test_suffix.jpg")))
+    (is (= true (png-file? "/folder/test_suffix.png")))
+    (is (= true (png-file? "folder/test_suffix.png")))
+    (is (= true (png-file? "image.png")))
     )
 
-  (testing "apply a suffix to a file path"
-    (is (= "test_suffix.ext" (get-suffixed-path "test.ext" "_suffix")))
-    (is (= "a/test_suffix.ext" (get-suffixed-path "a/test.ext" "_suffix")))
-    (is (= "/test_suffix.ext" (get-suffixed-path "/test.ext" "_suffix")))
+  (testing "change-path-extension"
+    (is (= "test.ext" (change-path-extension "test.extold" "ext")))
+    (is (= "dir/test.png" (change-path-extension "dir/test.ext" "png")))
+    (is (= "/test.jpg" (change-path-extension "/test.ext" "jpg")))
     )
 
-  (testing "generate thumbnail path with dimensions"
-    (is (= "test_10x10.ext" (get-thumb-path "test.ext" 10 10)))
-    (is (= "test_10x30.ext" (get-thumb-path "test.ext" 10 30)))
+  (testing "apply-suffix-to-filename"
+    (is (= "test_suffix.ext" (apply-suffix-to-filename "test.ext" "_suffix")))
+    (is (= "a/test_suffix.ext" (apply-suffix-to-filename "a/test.ext" "_suffix")))
+    (is (= "/test_suffix.ext" (apply-suffix-to-filename "/test.ext" "_suffix")))
     )
 
-  (testing "generate circle thumbnail path"
-    (is (= "test_circle.ext" (get-circle-thumb-path "test.ext")))
+  (testing "load-image-from-path"
+    (is (thrown? IIOException (load-image-from-path "invalid")))
+    (is (= BufferedImage (type (load-image-from-path test-image))))
     )
 
-  (testing "load buffered image from path"
+  (testing "get-image-info"
+    (is (thrown? IIOException (get-image-info "invalid")))
+    (is (= {:width 900 :height 900} (get-image-info test-image)))
+    (is (= {:width 800 :height 800} (get-image-info test-convert-image)))
+    )
+
+  (testing "convert-to-png"
+    (is (thrown? IIOException (convert-to-png "invalid")))
+    (is (=
+          (change-path-extension test-convert-image "png")
+          (convert-to-png test-convert-image)))
+    )
+
+  (testing "create-thumbnail"
     (is (thrown? IIOException
-                 (load-image-from-path "invalid")))
-    (is (= BufferedImage
-           (type (load-image-from-path "test/resources/test.png"))))
-    )
-
-  (testing "resize an image giving width and height"
-    (is (thrown? IIOException
-                 (do-image-resize "invalid" 1 1)))
+                 (create-thumbnail "invalid" 1 1)))
     (is (= (str test-resources "test_400x400.png")
-           (do-image-resize test-image 400 400)))
+           (create-thumbnail test-image 400 400)))
     (is (= BufferedImage
            (type (load-image-from-path (str test-resources "test_400x400.png")))))
     (is (= 400
            (img/width (load-image-from-path (str test-resources "test_400x400.png")))))
     (is (= 400
            (img/height (load-image-from-path (str test-resources "test_400x400.png")))))
+
+    (is (= (str test-resources "convert_200x200.png")
+           (create-thumbnail test-convert-image 200 200)))
     )
 
-  (testing "crop a circle image"
+  (testing "crop-circle-png"
     (is (thrown? IIOException
-                 (do-image-crop-circle "invalid")))
+                 (crop-circle-png "invalid")))
     (is (= (str test-resources "test_400x400_circle.png")
-           (do-image-crop-circle (str test-resources "test_400x400.png"))))
+           (crop-circle-png (str test-resources "test_400x400.png"))))
     (is (= BufferedImage
            (type (load-image-from-path (str test-resources "test_400x400_circle.png")))))
     (is (= 400
            (img/width (load-image-from-path (str test-resources "test_400x400_circle.png")))))
     (is (= 400
            (img/height (load-image-from-path (str test-resources "test_400x400_circle.png")))))
+
+    (is (= (str test-resources "convert_circle.png")
+           (crop-circle-png test-convert-image)))
     )
+
   )
 
 

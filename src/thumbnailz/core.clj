@@ -10,26 +10,27 @@
     [javax.imageio ImageIO]
     )
   )
-;TODO description
-(defn is-png
+
+(defn png-file?
+  "Check if the input string path has the png extension"
   [img-path]
   (let [path (str/split img-path #"\/")
         file-parts (str/split (last path) #"\.")]
     (= "png" (str/lower-case (last file-parts)))
     ))
 
-;TODO test description
-(defn apply-png-ext-to-path
-  [src-path]
+(defn change-path-extension
+  "Returns the input string path changing file extension"
+  [src-path new-ext]
   (let [path (str/split src-path #"\/")
         file-parts (str/split (last path) #"\.")
-        file-name (str (first file-parts) ".png")]
+        file-name (str (first file-parts) "." new-ext)]
     (if (> (count (drop-last path)) 0)
       (str (str/join "/" (drop-last path)) "/" file-name)
       file-name)))
 
-(defn get-suffixed-path
-  "apply suffix to the filename of src-path and returns the whole new path"
+(defn apply-suffix-to-filename
+  "apply suffix to the filename of input string path and returns the whole new path"
   [src-path suffix]
   (let [path (str/split src-path #"\/")
         file-parts (str/split (last path) #"\.")
@@ -42,81 +43,65 @@
       (str (str/join "/" (drop-last path)) "/" suffixed-file-name)
       suffixed-file-name)))
 
-(defn get-thumb-path
-  "returns the thumbanil path with dimensions"
-  [src-path width height]
-  (get-suffixed-path src-path (str "_" width "x" height)))
-
-(defn get-circle-thumb-path
-  "returns the circle thumbanil path"
-  [src-path]
-  (get-suffixed-path src-path "_circle"))
-
 (defn load-image-from-path
   [image-path]
-  (img/load-image (file image-path))
+  (img/load-image (file image-path)))
+
+(defn get-image-info
+  "Returns image informations"
+  [src-path]
+  (let [image (load-image-from-path src-path)]
+    {
+     :width (img/width image)
+     :height (img/height image)
+     }
+    ))
+
+(defn convert-to-png
+  "Load image from input string path and save into png"
+  [img-path]
+  (let [image (load-image-from-path img-path)
+        png-path (change-path-extension img-path "png")]
+    (ImageIO/write image "png" (file png-path))
+    png-path)
   )
 
-;TODO test description
-(defn convert-to-png
-  [img-path]
-  (if (not (is-png img-path))
-    (let [image (load-image-from-path img-path)
-          png-path (apply-png-ext-to-path img-path)]
-      (ImageIO/write image "png" (file png-path))
-      png-path)
-    img-path))
-
-(defn do-image-resize
-  "Resize an image and save on disk"
+(defn create-thumbnail
+  "Creates a thumbnail of giver width height"
   [src-path width height]
-  (let [src-image (load-image-from-path src-path)]
-    (img/save
-      (img/resize src-image width height)
-      (get-thumb-path src-path width height))))
+  (cond
+    (png-file? src-path) (let [src-image (load-image-from-path src-path)]
+                           (img/save
+                             (img/resize src-image width height)
+                             (apply-suffix-to-filename src-path (str "_" width "x" height))))
+    :else (create-thumbnail (convert-to-png src-path) width height)))
 
-(defn do-image-crop-circle
+(defn crop-circle-png
   "Crop a circled image and save on disk"
   [src-path]
-  (let [src-image (load-image-from-path src-path)
-        output-image (img/new-image
-                       (img/width src-image)
-                       (img/height src-image)
-                       )
-        ^Graphics2D g2 (.createGraphics output-image)
-        ]
-    (.setComposite g2 AlphaComposite/Src)
+  (cond
+    (png-file? src-path) (let [src-image (load-image-from-path src-path)
+                               output-image (img/new-image
+                                              (img/width src-image)
+                                              (img/height src-image)
+                                              )
+                               ^Graphics2D g2 (.createGraphics output-image)]
+                           (.setComposite g2 AlphaComposite/Src)
+                           (.setRenderingHint g2
+                                              RenderingHints/KEY_ANTIALIASING
+                                              RenderingHints/VALUE_ANTIALIAS_ON)
 
-    (.setRenderingHint g2
-                       RenderingHints/KEY_ANTIALIASING
-                       RenderingHints/VALUE_ANTIALIAS_ON)
+                           (.setColor g2 Color/WHITE)
+                           (.fill g2 (RoundRectangle2D$Float.
+                                       0 0
+                                       (img/width src-image) (img/height src-image)
+                                       (img/width src-image) (img/width src-image)))
+                           (.setComposite g2 AlphaComposite/SrcAtop)
+                           (.drawImage g2 src-image 0 0 nil)
+                           (.dispose g2)
 
-    (.setColor g2 Color/WHITE)
+                           (img/save
+                             output-image
+                             (apply-suffix-to-filename src-path (str "_circle"))))
 
-    (.fill g2 (RoundRectangle2D$Float.
-                0 0
-                (img/width src-image) (img/height src-image)
-                (img/width src-image) (img/width src-image)))
-
-    (.setComposite g2 AlphaComposite/SrcAtop)
-
-    (.drawImage g2 src-image 0 0 nil)
-
-    (.dispose g2)
-
-    (img/save
-      output-image
-      (get-circle-thumb-path src-path))))
-
-;TODO remove method and expose only utilities
-(defn thumblr
-  [src-path width height]
-  (let [png (convert-to-png src-path)
-        thumb (do-image-resize png width height)
-        circle (do-image-crop-circle thumb)
-        ]
-    {
-     :raw png
-     :thumb thumb
-     :circle circle
-     }))
+    :else (crop-circle-png (convert-to-png src-path))))
