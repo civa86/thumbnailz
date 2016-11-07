@@ -49,7 +49,7 @@
   (img/load-image (file image-path)))
 
 (defn get-image-info
-  "Returns informations about the image located at image-path."
+  "Returns information about the image located at image-path."
   [image-path]
   (let [image (load-image-from-path image-path)]
     {
