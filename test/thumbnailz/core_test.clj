@@ -33,14 +33,14 @@
 (use-fixtures :each clean-files)
 
 (deftest thumbnailz.image.utilities
-  (testing "png-file?"
-    (is (= false (png-file? "test_suffix.jpg")))
-    (is (= false (png-file? "test_suffix.gif")))
-    (is (= false (png-file? "folder/test_suffix.jpg")))
-    (is (= false (png-file? "/folder/test_suffix.jpg")))
-    (is (= true (png-file? "/folder/test_suffix.png")))
-    (is (= true (png-file? "folder/test_suffix.png")))
-    (is (= true (png-file? "image.png")))
+  (testing "png-path?"
+    (is (= false (png-path? "test_suffix.jpg")))
+    (is (= false (png-path? "test_suffix.gif")))
+    (is (= false (png-path? "folder/test_suffix.jpg")))
+    (is (= false (png-path? "/folder/test_suffix.jpg")))
+    (is (= true (png-path? "/folder/test_suffix.png")))
+    (is (= true (png-path? "folder/test_suffix.png")))
+    (is (= true (png-path? "image.png")))
     )
 
   (testing "change-path-extension"
@@ -89,11 +89,11 @@
            (create-thumbnail test-convert-image 200 200)))
     )
 
-  (testing "crop-circle-png"
+  (testing "crop-circle"
     (is (thrown? IIOException
-                 (crop-circle-png "invalid")))
+                 (crop-circle "invalid")))
     (is (= (str test-resources "test_400x400_circle.png")
-           (crop-circle-png (str test-resources "test_400x400.png"))))
+           (crop-circle (str test-resources "test_400x400.png"))))
     (is (= BufferedImage
            (type (load-image-from-path (str test-resources "test_400x400_circle.png")))))
     (is (= 400
@@ -102,7 +102,7 @@
            (img/height (load-image-from-path (str test-resources "test_400x400_circle.png")))))
 
     (is (= (str test-resources "convert_circle.png")
-           (crop-circle-png test-convert-image)))
+           (crop-circle test-convert-image)))
     )
 
   )
