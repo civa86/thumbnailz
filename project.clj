@@ -1,4 +1,4 @@
-(defproject info.civa86/thumbnailz "0.1.0"
+(defproject org.clojars.civa86/thumbnailz "0.1.0"
   :description "Thumbnail generator library for Clojure"
   :url "https://github.com/civa86/thumbnailz"
   :license {:name "MIT"
@@ -9,4 +9,3 @@
                  ]
   :profiles {:dev {:plugins [[com.jakemccrary/lein-test-refresh "0.12.0"]]}}
   )
-
