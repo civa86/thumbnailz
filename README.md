@@ -1,5 +1,7 @@
 # thumbnailz
 
+[![Clojars Project](https://img.shields.io/clojars/v/org.clojars.civa86/thumbnailz.svg)](https://clojars.org/org.clojars.civa86/thumbnailz)
+
 Thumbnail generator library for Clojure.
 
 Based on [mikera/imagez](https://github.com/mikera/imagez) this library is useful to convert, resize and crop images.
