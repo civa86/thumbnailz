@@ -8,6 +8,7 @@
     [java.awt Graphics2D AlphaComposite RenderingHints Color]
     [java.awt.geom RoundRectangle2D$Float]
     [javax.imageio ImageIO]
+    [org.imgscalr Scalr]
     )
   )
 
@@ -82,21 +83,19 @@
     "Returns the BufferedImage resized by width and height.
      If only one dimension is specified, the biggest between widht and height is resized, maintaing the ratio of the other one."
 
-    ([image-path width height]
-      (let [src-image (load-image-from-path image-path)]
-           (img/resize src-image width height))
-    )
-    ([image-path dimension]
-      (let [src-image (load-image-from-path image-path)
-            src-image-width (get-image-object-width src-image)
+    ([src-image width height]
+      (img/resize src-image width height))
+
+    ([src-image dimension]
+      (let [src-image-width (get-image-object-width src-image)
             src-image-height (get-image-object-height src-image)]
            (cond
                (> src-image-width src-image-height)
                     (let [calculated-dimension (/ (* (long dimension) src-image-height) src-image-width)]
-                         (resize-image image-path dimension calculated-dimension))
+                         (resize-image src-image dimension calculated-dimension))
 
                :else (let [calculated-dimension (/ (* (long dimension) src-image-width) src-image-height)]
-                          (resize-image image-path calculated-dimension dimension))
+                          (resize-image src-image calculated-dimension dimension))
            ))
     )
   )
@@ -106,19 +105,38 @@
      Saves the image to the dest-path."
 
     ([src-path dest-path width height]
-        (save-image-to-path (resize-image src-path width height) dest-path))
+        (save-image-to-path (resize-image (load-image-from-path src-path) width height) dest-path))
 
     ([src-path dest-path dimension]
-        (save-image-to-path (resize-image src-path dimension) dest-path))
+        (save-image-to-path (resize-image (load-image-from-path src-path) dimension) dest-path))
   )
 
   (defn crop-square
     "Returns the path of a new square image resized from image-path with width and height euqal to dimension.
+     If the image is not squared, it will be cropped from center by the min dimension.
      Saves the new png at the same level of image-path applying suffix to file name."
 
     [image-path dimension suffix]
     (cond
-      (png-path? image-path) (resize-image-and-save image-path (apply-suffix-to-filename image-path suffix) dimension dimension)
+      (png-path? image-path) (let [img-dimensions (get-image-info image-path)]
+                                (cond
+                                    (= (:width img-dimensions) (:height img-dimensions))
+                                        (resize-image-and-save image-path
+                                                               (apply-suffix-to-filename image-path suffix)
+                                                               dimension
+                                                               dimension)
+                                    :else (let [min-dim (min (:width img-dimensions) (:height img-dimensions))
+                                                cropped (Scalr/crop
+                                                    (load-image-from-path image-path)
+                                                    (- (/ (:width img-dimensions) 2) (/ min-dim 2))
+                                                    (- (/ (:height img-dimensions) 2) (/ min-dim 2))
+                                                    min-dim
+                                                    min-dim
+                                                    nil)]
+                                            (save-image-to-path
+                                                (resize-image cropped dimension dimension)
+                                                (apply-suffix-to-filename image-path suffix)))))
+
       :else (crop-square (convert-to-png image-path) dimension suffix)))
 
   (defn crop-circle

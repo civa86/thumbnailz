@@ -108,8 +108,7 @@ Example:
 
 Usage: `(convert-to-png image-path)`
 
-Returns the path of the new png created from image-path file
-
+Returns the path of the new png created from image-path file.<br/>
 Saves the new png at the same level of image-path
 
 Example:
@@ -133,10 +132,11 @@ Example:
 #### resize-image
 
 Usage: `(resize-image image-path width height)`
+
 Usage: `(resize-image image-path dimension)`
 
-Returns the BufferedImage resized by width and height.
-If only one dimension is specified, the biggest between widht and height is resized, maintaing the ratio of the other one.
+Returns the BufferedImage resized by width and height.<br/>
+If only one dimension is specified, the biggest between width and height is resized, maintaining the ratio of the other one.
 
 Example:
 ```clojure
@@ -150,10 +150,10 @@ Example:
 #### resize-image-and-save
 
 Usage: `(resize-image-and-save image-path dest-path width height)`
+
 Usage: `(resize-image-and-save image-path dest-path dimension)`
 
-Returns the dest-path of the resized image located in src-path.
-
+Returns the dest-path of the resized image located in src-path.<br/>
 Saves the image to the dest-path.
 
 Example:
@@ -170,8 +170,8 @@ Example:
 
 Usage: `(crop-square image-path dimension suffix)`
 
-Returns the path of a new square image resized from image-path with width and height euqal to dimension.
-
+Returns the path of a new square image resized from image-path with width and height equal to dimension.<br/>
+If the image is not squared, it will be cropped from center by the min dimension.<br/>
 Saves the new png at the same level of image-path applying suffix to file name.
 
 Example:
@@ -188,8 +188,7 @@ Example:
 
 Usage: `(crop-circle image-path dimension suffix)`
 
-Returns the path of a new circle image cropped from image-path with width and height equal to dimension.
-
+Returns the path of a new circle image cropped from image-path with width and height equal to dimension.<br/>
 Saves the new png at the same level of image-path applying suffix to file name.
 
 Example:

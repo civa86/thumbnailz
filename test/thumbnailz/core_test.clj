@@ -91,11 +91,12 @@
     ))
 
   (testing "resize-image"
-    (is (thrown? IIOException (resize-image "invalid" 200 200)))
-    (is (thrown? IIOException (resize-image "invalid" 200)))
-    (let [resized-image (resize-image test-convert-image 100 100)
-          resized-portrait (resize-image test-portrait 100)
-          resized-landscape (resize-image test-landscape 100)]
+    (is (thrown? IIOException (resize-image (load-image-from-path "invalid") 200 200)))
+    (is (thrown? IIOException (resize-image (load-image-from-path "invalid") 200)))
+    (let [resized-image (resize-image (load-image-from-path test-convert-image) 100 100)
+          resized-portrait (resize-image (load-image-from-path test-portrait) 100)
+          resized-landscape (resize-image (load-image-from-path test-landscape) 100)]
+
          (is (= 100 (get-image-object-width resized-image)))
          (is (= 100 (get-image-object-height resized-image)))
 
@@ -132,6 +133,20 @@
 
     (is (= (str test-resources "convert_200x200.png")
            (crop-square test-convert-image 200 "_200x200")))
+
+    (is (= (str test-resources "landscape_land_150x150.png")
+           (crop-square test-landscape 150 "_land_150x150")))
+    (is (= 150
+           (get-image-object-width (load-image-from-path (str test-resources "landscape_land_150x150.png")))))
+    (is (= 150
+           (get-image-object-height (load-image-from-path (str test-resources "landscape_land_150x150.png")))))
+
+    (is (= (str test-resources "portrait_port_150x150.png")
+           (crop-square test-portrait 150 "_port_150x150")))
+    (is (= 150
+           (get-image-object-width (load-image-from-path (str test-resources "portrait_port_150x150.png")))))
+    (is (= 150
+           (get-image-object-height (load-image-from-path (str test-resources "portrait_port_150x150.png")))))
     )
 
   (testing "crop-circle"
